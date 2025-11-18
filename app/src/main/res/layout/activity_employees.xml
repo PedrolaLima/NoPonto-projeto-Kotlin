@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0F2F5"
+    tools:context=".EmployeesActivity">
+
+    <include
+        android:id="@+id/appBarLayout"
+        layout="@layout/app_bar" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_filter"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:text="Filtro"
+            android:textAllCaps="false"
+            android:textColor="@android:color/black"
+            app:icon="@drawable/ic_btn_filter"
+            app:iconPadding="12dp"
+            app:iconTint="@android:color/black"
+            app:iconGravity="textStart"
+            app:strokeColor="@android:color/darker_gray"
+            app:cornerRadius="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btn_search"
+            app:layout_constraintHorizontal_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_search"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="8dp"
+            android:text="Procurar"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="@android:color/black"
+            app:icon="@drawable/ic_search"
+            app:iconPadding="12dp"
+            app:iconTint="@android:color/black"
+            app:iconGravity="textStart"
+            app:strokeColor="@android:color/darker_gray"
+            app:cornerRadius="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_filter"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="2" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_employee"
+            style="@style/Widget.MaterialComponents.Button.Icon"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:text="Adicionar Funcionário"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#009688"
+            app:icon="@drawable/ic_add_user"
+            app:iconTint="@android:color/white"
+            app:iconGravity="textStart"
+            app:cornerRadius="8dp"
+            app:layout_constraintTop_toBottomOf="@id/btn_filter"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            app:layout_constraintTop_toBottomOf="@id/btn_add_employee"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:background="#009688"
+                        android:paddingVertical="12dp"
+                        android:paddingHorizontal="16dp">
+
+                        <TextView
+                            style="@style/TableHeader.White"
+                            android:layout_width="60dp"
+                            android:layout_height="18dp"
+                            android:text=""/>
+
+                        <TextView
+                            style="@style/TableHeader.White"
+                            android:layout_width="240dp"
+                            android:layout_height="18dp"
+                            android:text="Funcionário"/>
+
+                        <TextView
+                            style="@style/TableHeader.White"
+                            android:layout_width="150dp"
+                            android:layout_height="18dp"
+                            android:text="CPF"/>
+
+                        <TextView
+                            style="@style/TableHeader.White"
+                            android:layout_width="250dp"
+                            android:layout_height="18dp"
+                            android:text="Email"/>
+
+                        <TextView
+                            style="@style/TableHeader.White"
+                            android:layout_width="150dp"
+                            android:layout_height="18dp"
+                            android:text="Cargo"/>
+
+                        <TextView
+                            style="@style/TableHeader.White"
+                            android:layout_width="100dp"
+                            android:layout_height="18dp"
+                            android:text="Status"/>
+
+                        <TextView
+                            style="@style/TableHeader.White"
+                            android:layout_width="100dp"
+                            android:layout_height="18dp"
+                            android:text="Ação"
+                            android:gravity="center"/>
+
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/employee_recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    tools:listitem="@layout/item_employee_row" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

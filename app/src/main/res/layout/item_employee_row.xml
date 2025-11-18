@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp"
+    android:gravity="center_vertical">
+
+    <!-- Funcionário Column (with image) -->
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/employee_image"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/logo_no_ponto"
+            app:civ_border_width="1dp"
+            app:civ_border_color="#E0E0E0"/>
+
+        <TextView
+            android:id="@+id/employee_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textColor="@android:color/black"
+            tools:text="Pedro Henrique de Lima Franca" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/employee_cpf"
+        style="@style/TableBodyText"
+        android:layout_width="150dp"
+        tools:text="430.460.518-67" />
+
+    <TextView
+        android:id="@+id/employee_email"
+        style="@style/TableBodyText"
+        android:layout_width="250dp"
+        tools:text="pedrolima@email.com" />
+
+    <TextView
+        android:id="@+id/employee_role"
+        style="@style/TableBodyText"
+        android:layout_width="150dp"
+        tools:text="Administrador" />
+
+    <TextView
+        android:id="@+id/employee_status"
+        style="@style/TableBodyText"
+        android:layout_width="100dp"
+        tools:text="Ativo" />
+
+    <!-- Ação Column (with icons) -->
+    <LinearLayout
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <ImageView
+            android:id="@+id/btn_edit"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_edit"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            app:tint="#FFC107"/>
+
+        <ImageView
+            android:id="@+id/btn_delete"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            app:tint="#E53935"/>
+
+    </LinearLayout>
+
+</LinearLayout>
