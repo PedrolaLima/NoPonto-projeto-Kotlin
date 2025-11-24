@@ -40,9 +40,6 @@ object Mask {
                 var clean = mascara.replace("[^\\d]".toRegex(), "")
 
                 if (format == "##/##/####") {
-                    val calendar = Calendar.getInstance()
-                    val currentYear = calendar.get(Calendar.YEAR)
-
                     if (clean.length >= 2) {
                         val day = clean.substring(0, 2).toIntOrNull()
                         if (day != null && day > 31) {
@@ -56,9 +53,18 @@ object Mask {
                         }
                     }
                     if (clean.length == 8) {
-                        val year = clean.substring(4, 8).toIntOrNull()
-                        if (year != null && year > currentYear) {
-                            clean = clean.substring(0, 4) + currentYear.toString()
+                        val day = clean.substring(0, 2).toInt()
+                        val month = clean.substring(2, 4).toInt()
+                        val year = clean.substring(4, 8).toInt()
+
+                        val today = Calendar.getInstance()
+                        val currentYear = today.get(Calendar.YEAR)
+                        val currentMonth = today.get(Calendar.MONTH) + 1
+                        val currentDay = today.get(Calendar.DAY_OF_MONTH)
+                        if (year > currentYear ||
+                            (year == currentYear && month > currentMonth) ||
+                            (year == currentYear && month == currentMonth && day > currentDay)) {
+                            clean = String.format("%02d%02d%d", currentDay, currentMonth, currentYear)
                         }
                     }
                     val len = clean.length
