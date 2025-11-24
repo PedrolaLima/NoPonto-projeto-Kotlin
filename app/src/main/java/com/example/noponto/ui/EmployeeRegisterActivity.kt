@@ -1,16 +1,13 @@
 package com.example.noponto.ui
 
 import android.app.DatePickerDialog
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Patterns
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
 import com.example.noponto.R
@@ -20,13 +17,10 @@ import com.example.noponto.databinding.AppBarBinding
 import com.example.noponto.domain.model.Cargo
 import com.example.noponto.domain.model.Endereco
 import com.example.noponto.domain.model.Funcionario
-import com.google.type.DateTime
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.util.Calendar
-import kotlin.toString
 
 class EmployeeRegisterActivity : BaseActivity() {
 
@@ -34,14 +28,6 @@ class EmployeeRegisterActivity : BaseActivity() {
     private lateinit var binding: ActivityEmployeeRegisterBinding
     override val appBarBinding: AppBarBinding
         get() = binding.appBarLayout
-
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        result ->
-        if (result.resultCode == RESULT_OK) {
-            val imageUri = result.data?.data
-            binding.profileImage.setImageURI(imageUri)
-        }
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,10 +41,6 @@ class EmployeeRegisterActivity : BaseActivity() {
         setupInputMasks()
         setupValidation()
 
-        binding.profileImage.setOnClickListener {
-            openGalleryForImage()
-        }
-
         binding.buttonCancelar.setOnClickListener {
             finish()
         }
@@ -71,19 +53,22 @@ class EmployeeRegisterActivity : BaseActivity() {
         }
     }
 
-    private fun openGalleryForImage() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        pickImageLauncher.launch(intent)
-    }
-
     private fun setupDropdowns() {
         val statusOptions = arrayOf("Ativo", "Inativo")
         val statusAdapter = ArrayAdapter(this, R.layout.dropdown_item, statusOptions)
         binding.statusAutocomplete.setAdapter(statusAdapter)
 
-        val cargoOptions = arrayOf("Administrador", "Desenvolvedor", "Designer")
+        val cargoOptions = arrayOf("Administrador", "Desenvolvedor")
         val cargoAdapter = ArrayAdapter(this, R.layout.dropdown_item, cargoOptions)
         binding.cargoAutocomplete.setAdapter(cargoAdapter)
+
+        binding.cargoAutocomplete.setOnItemClickListener { parent, _, position, _ ->
+            val selectedRole = parent.getItemAtPosition(position).toString()
+            when (selectedRole) {
+                "Administrador" -> binding.profileImage.setImageResource(R.drawable.ic_admin)
+                "Desenvolvedor" -> binding.profileImage.setImageResource(R.drawable.ic_developer)
+            }
+        }
 
         val estadoOptions = arrayOf(
             "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
@@ -158,7 +143,7 @@ class EmployeeRegisterActivity : BaseActivity() {
         funcionarioRepository.registerFuncionario(funcionario, senha).onSuccess {
             showMessage("Funcionário cadastrado com sucesso!")
             finish()
-        }.onFailure { exception ->
+        }.onFailure {
             showMessage("Falha ao cadastrar funcionário")
         }
 
@@ -251,7 +236,6 @@ class EmployeeRegisterActivity : BaseActivity() {
         return when (cargoStr.trim()) {
             "Administrador" -> Cargo.ADMINISTRADOR
             "Desenvolvedor" -> Cargo.DESENVOLVEDOR
-            "Designer" -> Cargo.DESIGNER
             else -> throw IllegalArgumentException("Cargo inválido: $cargoStr")
         }
     }
