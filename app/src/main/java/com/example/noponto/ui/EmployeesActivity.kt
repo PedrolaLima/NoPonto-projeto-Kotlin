@@ -14,6 +14,7 @@ import com.example.noponto.R
 import com.example.noponto.databinding.ActivityEmployeesBinding
 import com.example.noponto.databinding.AppBarBinding
 import com.example.noponto.databinding.ItemEmployeeRowBinding
+import com.google.firebase.firestore.FirebaseFirestore
 import java.io.Serializable
 import java.util.*
 import kotlin.Comparator
@@ -53,13 +54,36 @@ class EmployeesActivity : BaseActivity() {
     }
 
     private fun loadEmployeeData() {
-        originalEmployeeList = listOf(
-            Employee("Pedro Henrique de Lima Franca", "111.222.333-44", "pedro@email.com", "Administrador", "Ativo"),
-            Employee("Maria Joaquina", "555.666.777-88", "maria.j@email.com", "Desenvolvedor", "Ativo"),
-            Employee("José Carlos", "999.000.111-22", "jose.c@email.com", "Designer", "Inativo"),
-            Employee("Ana Vitoria", "333.444.555-66", "ana.v@email.com", "Gerente", "Ativo")
-        )
+        // Inicializa a lista exibida para que o RecyclerView possa ser configurado
         displayedEmployeeList = mutableListOf()
+        originalEmployeeList = emptyList()
+
+        // Busca funcionários do Firestore (coleção `funcionarios`)
+        val db = FirebaseFirestore.getInstance()
+        db.collection("funcionarios")
+            .get()
+            .addOnSuccessListener { snap ->
+                val list = snap.documents.mapNotNull { doc ->
+                    val name = doc.getString("nome") ?: doc.getString("name") ?: ""
+                    val cpf = doc.getString("cpf") ?: ""
+                    val email = doc.getString("email") ?: ""
+                    val role = doc.getString("cargo") ?: doc.getString("role") ?: ""
+                    val statusField = doc.get("status")
+                    val status = when (statusField) {
+                        is Boolean -> if (statusField) "Ativo" else "Inativo"
+                        is String -> statusField
+                        else -> ""
+                    }
+                    // se nenhum campo essencial estiver presente, ignore o doc
+                    if (name.isBlank() && email.isBlank()) return@mapNotNull null
+                    Employee(name, cpf, email, role, status)
+                }
+                originalEmployeeList = list
+                updateDisplayedList()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Erro ao carregar funcionários: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
     }
 
     private fun setupRecyclerView() {
