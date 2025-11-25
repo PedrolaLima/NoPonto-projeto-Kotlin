@@ -72,6 +72,7 @@ class RecordActivity : BaseActivity() {
             val intent = Intent(this, RecordUserActivity::class.java).apply {
                 putExtra("employeeName", selectedEmployee?.nome)
                 putExtra("employeeRole", selectedEmployee?.cargo?.name)
+                putExtra("funcionarioId", selectedEmployee?.id)
                 putExtra("period", selectedPeriod)
                 putExtra("currentUserRole", currentFuncionario?.cargo?.name)
             }

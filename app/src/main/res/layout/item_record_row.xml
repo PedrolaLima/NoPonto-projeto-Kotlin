@@ -59,6 +59,14 @@
             android:layout_width="120dp"
             android:layout_height="wrap_content" />
 
+        <TextView
+            android:id="@+id/report_descricao"
+            style="@style/TableBodyText"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:text="+"
+            android:textAlignment="center" />
+
     </LinearLayout>
 
     <View
