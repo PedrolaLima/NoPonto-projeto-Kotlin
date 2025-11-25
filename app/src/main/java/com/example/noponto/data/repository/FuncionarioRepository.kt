@@ -170,14 +170,32 @@ class FuncionarioRepository(
 
     override suspend fun getFuncionariosByStatus(status: Boolean): Result<List<Funcionario>> {
         return try {
+            Log.d(TAG, "Getting funcionários with status: $status")
             val querySnapshot = firestore.collection("funcionarios")
                 .whereEqualTo("status", status)
                 .get()
                 .await()
 
-            val funcionarios = querySnapshot.documents.mapNotNull { it.toObject(FirestoreFuncionario::class.java)?.toDomain() }
+            Log.d(TAG, "Found ${querySnapshot.documents.size} documents")
+
+            val funcionarios = querySnapshot.documents.mapNotNull { document ->
+                val firestoreDto = document.toObject(FirestoreFuncionario::class.java)
+                if (firestoreDto != null) {
+                    // Definir o ID do documento se estiver vazio
+                    if (firestoreDto.id.isBlank()) {
+                        firestoreDto.id = document.id
+                    }
+                    firestoreDto.toDomain()
+                } else {
+                    Log.w(TAG, "Failed to deserialize document: ${document.id}")
+                    null
+                }
+            }
+
+            Log.d(TAG, "Successfully converted ${funcionarios.size} funcionários")
             Result.success(funcionarios)
         } catch (e: Exception) {
+            Log.e(TAG, "Error getting funcionários by status", e)
             Result.failure(e)
         }
     }

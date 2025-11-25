@@ -88,20 +88,15 @@ fun FirestoreFuncionario.toDomain(): Funcionario? {
     Log.d(TAG, "  endereco: $endereco")
 
     // Validação de campos obrigatórios
-    if (id.isBlank()) {
-        Log.e(TAG, "❌ Campo 'id' está vazio!")
-        return null
-    }
-    if (nome.isBlank()) {
-        Log.e(TAG, "❌ Campo 'nome' está vazio!")
-        return null
-    }
-    if (email.isBlank()) {
-        Log.e(TAG, "❌ Campo 'email' está vazio!")
-        return null
-    }
-    if (cpf.isBlank()) {
-        Log.e(TAG, "❌ Campo 'cpf' está vazio!")
+    val missingFields = mutableListOf<String>()
+    if (id.isBlank()) missingFields.add("id")
+    if (nome.isBlank()) missingFields.add("nome")
+    if (email.isBlank()) missingFields.add("email")
+    if (cpf.isBlank()) missingFields.add("cpf")
+
+    if (missingFields.isNotEmpty()) {
+        Log.w(TAG, "Missing required fields: id=$id, nome=$nome, email=$email, cpf=$cpf")
+        Log.e(TAG, "❌ Campos obrigatórios faltando: ${missingFields.joinToString(", ")}")
         return null
     }
 
