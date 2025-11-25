@@ -4,17 +4,24 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.noponto.R
+import com.example.noponto.data.repository.FuncionarioRepository
 import com.example.noponto.databinding.ActivityEmployeesBinding
 import com.example.noponto.databinding.AppBarBinding
 import com.example.noponto.databinding.ItemEmployeeRowBinding
+import com.example.noponto.domain.model.Cargo
+import com.example.noponto.domain.model.Funcionario
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.util.*
 import kotlin.Comparator
@@ -24,6 +31,10 @@ class EmployeesActivity : BaseActivity() {
     private lateinit var binding: ActivityEmployeesBinding
     override val appBarBinding: AppBarBinding
         get() = binding.appBarLayout
+
+    private val auth = FirebaseAuth.getInstance()
+    private val funcionarioRepository = FuncionarioRepository()
+    private var currentFuncionario: Funcionario? = null
 
     private lateinit var originalEmployeeList: List<Employee>
     private lateinit var displayedEmployeeList: MutableList<Employee>
@@ -37,13 +48,13 @@ class EmployeesActivity : BaseActivity() {
         setContentView(binding.root)
 
         setupAppBar()
+        loadCurrentFuncionario()
         loadEmployeeData()
         setupRecyclerView()
         setupSearch()
 
         binding.btnAddEmployee.setOnClickListener {
-            val intent = Intent(this, EmployeeRegisterActivity::class.java)
-            startActivity(intent)
+            checkPermissionAndCreateEmployee()
         }
 
         binding.btnFilter.setOnClickListener {
@@ -51,6 +62,60 @@ class EmployeesActivity : BaseActivity() {
         }
 
         updateDisplayedList()
+    }
+
+    private fun loadCurrentFuncionario() {
+        Log.d("EmployeesActivity", "Carregando funcionário autenticado...")
+        lifecycleScope.launch {
+            val userId = auth.currentUser?.uid
+            if (userId == null) {
+                Log.e("EmployeesActivity", "Usuário não autenticado!")
+                return@launch
+            }
+
+            funcionarioRepository.getFuncionarioById(userId).fold(
+                onSuccess = { funcionario ->
+                    if (funcionario == null) {
+                        Log.e("EmployeesActivity", "Funcionário autenticado não encontrado no banco!")
+                    } else {
+                        currentFuncionario = funcionario
+                        Log.d("EmployeesActivity", "Funcionário autenticado: ${funcionario.nome}, Cargo: ${funcionario.cargo}")
+                    }
+                },
+                onFailure = { error ->
+                    Log.e("EmployeesActivity", "Erro ao carregar funcionário autenticado", error)
+                }
+            )
+        }
+    }
+
+    private fun checkPermissionAndCreateEmployee() {
+        val funcionario = currentFuncionario
+
+        if (funcionario == null) {
+            Toast.makeText(
+                this,
+                "Erro ao verificar permissões. Tente novamente.",
+                Toast.LENGTH_SHORT
+            ).show()
+            Log.e("EmployeesActivity", "currentFuncionario é null ao tentar criar funcionário")
+            return
+        }
+
+        if (funcionario.cargo != Cargo.ADMINISTRADOR) {
+            Toast.makeText(
+                this,
+                "Você não tem permissão para criar funcionários. Apenas administradores podem realizar esta ação.",
+                Toast.LENGTH_LONG
+            ).show()
+            Log.d("EmployeesActivity", "Tentativa de criar funcionário negada - Usuário não é ADMINISTRADOR")
+            return
+        }
+
+        // Se chegou aqui, é administrador - pode criar
+        Log.d("EmployeesActivity", "Permissão concedida - Abrindo tela de registro")
+        val intent = Intent(this, EmployeeRegisterActivity::class.java)
+        startActivity(intent)
     }
 
     private fun loadEmployeeData() {
