@@ -1,13 +1,19 @@
 package com.example.noponto.ui
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import com.example.noponto.databinding.ActivityOccurrenceBinding
 import com.example.noponto.databinding.AppBarBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -20,10 +26,14 @@ class OccurrenceActivity : BaseActivity() {
     override val appBarBinding: AppBarBinding
         get() = binding.appBarLayout
 
+    // armazena a Uri selecionada na galeria (se houver)
+    private var selectedImageUri: Uri? = null
+
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         result ->
         if (result.resultCode == RESULT_OK) {
             val imageUri = result.data?.data
+            selectedImageUri = imageUri
             binding.attestationImage.setImageURI(imageUri)
         }
     }
@@ -40,6 +50,39 @@ class OccurrenceActivity : BaseActivity() {
 
         binding.attestationLayout.setOnClickListener {
             openGalleryForImage()
+        }
+
+        binding.buttonConfirmar.setOnClickListener {
+            // implementar cadastro de ocorrência
+            binding.buttonConfirmar.isEnabled = false
+            lifecycleScope.launch(Dispatchers.IO) {
+                val justificativa = binding.justificativaEditText.text.toString().trim()
+                val dateStr = binding.dateEditText.text.toString().trim()
+                val timeStr = binding.timeEditText.text.toString().trim()
+                val atestadoPath = selectedImageUri?.toString() // sem Storage, armazenamos o URI como referência (opcional)
+
+                try {
+                    val repo = com.example.noponto.data.repository.OcorrenciaRepository()
+                    val service = com.example.noponto.domain.services.OcorrenciaService(repo)
+                    val result = service.criarOcorrenciaFromUi(justificativa, dateStr, timeStr, atestadoPath)
+
+                    withContext(Dispatchers.Main) {
+                        if (result.isSuccess) {
+                            Toast.makeText(this@OccurrenceActivity, "Ocorrência registrada com sucesso", Toast.LENGTH_SHORT).show()
+                            finish()
+                        } else {
+                            val ex = result.exceptionOrNull()
+                            Toast.makeText(this@OccurrenceActivity, "Erro: ${ex?.localizedMessage ?: "Falha ao registrar"}", Toast.LENGTH_LONG).show()
+                            binding.buttonConfirmar.isEnabled = true
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@OccurrenceActivity, "Erro: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                        binding.buttonConfirmar.isEnabled = true
+                    }
+                }
+            }
         }
 
         binding.buttonCancelar.setOnClickListener {

@@ -1,14 +1,17 @@
 package com.example.noponto.ui
 
 import android.os.Bundle
+import androidx.lifecycle.lifecycleScope
+import com.example.noponto.data.repository.FuncionarioRepository
 import com.example.noponto.databinding.ActivityWelcomeBinding
 import com.example.noponto.databinding.AppBarBinding
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 class WelcomeActivity : BaseActivity() {
 
     private lateinit var binding: ActivityWelcomeBinding
+    private val funcionarioRepository = FuncionarioRepository()
     override val appBarBinding: AppBarBinding
         get() = binding.appBarLayout
 
@@ -25,13 +28,20 @@ class WelcomeActivity : BaseActivity() {
     private fun displayWelcomeMessage() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
-            FirebaseFirestore.getInstance().collection("users").document(userId).get()
-                .addOnSuccessListener { document ->
-                    if (document != null && document.exists()) {
-                        val role = document.getString("role")
-                        binding.welcomeMessageTextView.text = "BEM VINDO,\n${role?.uppercase() ?: ""}"
+            lifecycleScope.launch {
+                funcionarioRepository.getFuncionarioById(userId).fold(
+                    onSuccess = { funcionario ->
+                        if (funcionario != null) {
+                            binding.welcomeMessageTextView.text = "BEM VINDO,\n${funcionario.cargo.name}"
+                        } else {
+                            binding.welcomeMessageTextView.text = "BEM VINDO,\nFUNCIONÁRIO"
+                        }
+                    },
+                    onFailure = {
+                        binding.welcomeMessageTextView.text = "BEM VINDO,\nFUNCIONÁRIO"
                     }
-                }
+                )
+            }
         }
     }
 }

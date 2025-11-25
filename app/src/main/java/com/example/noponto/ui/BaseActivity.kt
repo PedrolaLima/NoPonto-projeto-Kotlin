@@ -9,10 +9,13 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.lifecycleScope
 import com.example.noponto.R
+import com.example.noponto.data.repository.FuncionarioRepository
 import com.example.noponto.databinding.AppBarBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 abstract class BaseActivity : AppCompatActivity() {
 
@@ -21,6 +24,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private val funcionarioRepository = FuncionarioRepository()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,13 +89,20 @@ abstract class BaseActivity : AppCompatActivity() {
     private fun loadUserName() {
         val userId = auth.currentUser?.uid
         if (userId != null) {
-            db.collection("users").document(userId).get()
-                .addOnSuccessListener { document ->
-                    if (document != null && document.exists()) {
-                        val name = document.getString("name")
-                        appBarBinding.userRole.text = name
+            lifecycleScope.launch {
+                funcionarioRepository.getFuncionarioById(userId).fold(
+                    onSuccess = { funcionario ->
+                        if (funcionario != null) {
+                            appBarBinding.userRole.text = funcionario.nome
+                        } else {
+                            appBarBinding.userRole.text = "Funcionário"
+                        }
+                    },
+                    onFailure = {
+                        appBarBinding.userRole.text = "Funcionário"
                     }
-                }
+                )
+            }
         }
     }
 }

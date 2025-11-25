@@ -8,6 +8,7 @@ import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.example.noponto.R
+import com.example.noponto.data.repository.FuncionarioRepository
 import com.example.noponto.data.repository.PlanoTrabalhoRepository
 import com.example.noponto.data.repository.PontoRepository
 import com.example.noponto.databinding.ActivityClockInBinding
@@ -27,6 +28,8 @@ class ClockInActivity : BaseActivity() {
     override val appBarBinding: AppBarBinding
         get() = binding.appBarLayout
 
+    private val auth = FirebaseAuth.getInstance()
+    private val funcionarioRepository = FuncionarioRepository()
     private val pontoService = PontoService(PontoRepository())
     private val planoTrabalhoService = PlanoTrabalhoService(PlanoTrabalhoRepository())
 
@@ -37,6 +40,7 @@ class ClockInActivity : BaseActivity() {
         setContentView(binding.root)
 
         setupAppBar()
+        loadFuncionarioData()
         setupInitialValues()
         setupInputMasks()
         setupDropdown()
@@ -146,6 +150,44 @@ class ClockInActivity : BaseActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun loadFuncionarioData() {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "Usuário não autenticado", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        lifecycleScope.launch {
+            val result = funcionarioRepository.getFuncionarioById(currentUser.uid)
+            result.fold(
+                onSuccess = { funcionario ->
+                    if (funcionario != null) {
+                        binding.inputNome.editText?.setText(funcionario.nome)
+                        // Formatar o cargo para exibição (primeira letra maiúscula, resto minúsculo)
+                        val cargoFormatted = funcionario.cargo.name.lowercase().replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase() else it.toString()
+                        }
+                        binding.inputCargo.editText?.setText(cargoFormatted)
+                    } else {
+                        Toast.makeText(
+                            this@ClockInActivity,
+                            "Funcionário não encontrado",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                onFailure = { e ->
+                    Toast.makeText(
+                        this@ClockInActivity,
+                        "Erro ao carregar dados: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
         }
     }
 
