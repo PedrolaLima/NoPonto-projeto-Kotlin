@@ -1,13 +1,9 @@
 package com.example.noponto.ui
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import com.example.noponto.databinding.ActivityOccurrenceBinding
 import com.example.noponto.databinding.AppBarBinding
@@ -26,18 +22,6 @@ class OccurrenceActivity : BaseActivity() {
     override val appBarBinding: AppBarBinding
         get() = binding.appBarLayout
 
-    // armazena a Uri selecionada na galeria (se houver)
-    private var selectedImageUri: Uri? = null
-
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        result ->
-        if (result.resultCode == RESULT_OK) {
-            val imageUri = result.data?.data
-            selectedImageUri = imageUri
-            binding.attestationImage.setImageURI(imageUri)
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOccurrenceBinding.inflate(layoutInflater)
@@ -48,10 +32,6 @@ class OccurrenceActivity : BaseActivity() {
         setupInputMasks()
         setupValidation()
 
-        binding.attestationLayout.setOnClickListener {
-            openGalleryForImage()
-        }
-
         binding.buttonConfirmar.setOnClickListener {
             // implementar cadastro de ocorrência
             binding.buttonConfirmar.isEnabled = false
@@ -59,12 +39,11 @@ class OccurrenceActivity : BaseActivity() {
                 val justificativa = binding.justificativaEditText.text.toString().trim()
                 val dateStr = binding.dateEditText.text.toString().trim()
                 val timeStr = binding.timeEditText.text.toString().trim()
-                val atestadoPath = selectedImageUri?.toString() // sem Storage, armazenamos o URI como referência (opcional)
 
                 try {
                     val repo = com.example.noponto.data.repository.OcorrenciaRepository()
                     val service = com.example.noponto.domain.services.OcorrenciaService(repo)
-                    val result = service.criarOcorrenciaFromUi(justificativa, dateStr, timeStr, atestadoPath)
+                    val result = service.criarOcorrenciaFromUi(justificativa, dateStr, timeStr, null)
 
                     withContext(Dispatchers.Main) {
                         if (result.isSuccess) {
@@ -88,11 +67,6 @@ class OccurrenceActivity : BaseActivity() {
         binding.buttonCancelar.setOnClickListener {
             finish()
         }
-    }
-
-    private fun openGalleryForImage() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        pickImageLauncher.launch(intent)
     }
 
     private fun setupInitialValues() {

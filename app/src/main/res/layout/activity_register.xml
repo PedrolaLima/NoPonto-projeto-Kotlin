@@ -144,11 +144,11 @@
                 android:layout_marginTop="48dp"/>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_registrar_ocorrencia"
+                android:id="@+id/btn_espelho_ponto"
                 style="@style/Widget.MaterialComponents.Button.Icon"
                 android:layout_width="0dp"
                 android:layout_height="70dp"
-                android:text="Registrar Ocorrência"
+                android:text="Espelho de Ponto"
                 android:textAllCaps="false"
                 android:textSize="18sp"
                 android:lines="2"
@@ -188,7 +188,7 @@
                 android:backgroundTint="#009688"
                 app:cornerRadius="10dp"
                 app:elevation="6dp"
-                app:layout_constraintTop_toBottomOf="@id/btn_registrar_ocorrencia"
+                app:layout_constraintTop_toBottomOf="@id/btn_espelho_ponto"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginTop="24dp"

@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,7 +23,6 @@ import com.example.noponto.domain.model.Funcionario
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
-import java.io.Serializable
 import java.util.*
 import kotlin.Comparator
 
@@ -36,8 +36,8 @@ class EmployeesActivity : BaseActivity() {
     private val funcionarioRepository = FuncionarioRepository()
     private var currentFuncionario: Funcionario? = null
 
-    private lateinit var originalEmployeeList: List<Employee>
-    private lateinit var displayedEmployeeList: MutableList<Employee>
+    private var originalEmployeeList: List<Employee> = emptyList()
+    private val displayedEmployeeList = mutableListOf<Employee>()
     private lateinit var adapter: EmployeeAdapter
 
     private var currentComparator: Comparator<Employee> = compareBy { it.name.lowercase() }
@@ -49,7 +49,6 @@ class EmployeesActivity : BaseActivity() {
 
         setupAppBar()
         loadCurrentFuncionario()
-        loadEmployeeData()
         setupRecyclerView()
         setupSearch()
 
@@ -62,6 +61,11 @@ class EmployeesActivity : BaseActivity() {
         }
 
         updateDisplayedList()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadEmployeeData()
     }
 
     private fun loadCurrentFuncionario() {
@@ -119,8 +123,6 @@ class EmployeesActivity : BaseActivity() {
     }
 
     private fun loadEmployeeData() {
-        // Inicializa a lista exibida para que o RecyclerView possa ser configurado
-        displayedEmployeeList = mutableListOf()
         originalEmployeeList = emptyList()
 
         // Busca funcionários do Firestore (coleção `funcionarios`)
@@ -129,6 +131,7 @@ class EmployeesActivity : BaseActivity() {
             .get()
             .addOnSuccessListener { snap ->
                 val list = snap.documents.mapNotNull { doc ->
+                    val id = doc.id
                     val name = doc.getString("nome") ?: doc.getString("name") ?: ""
                     val cpf = doc.getString("cpf") ?: ""
                     val email = doc.getString("email") ?: ""
@@ -141,7 +144,7 @@ class EmployeesActivity : BaseActivity() {
                     }
                     // se nenhum campo essencial estiver presente, ignore o doc
                     if (name.isBlank() && email.isBlank()) return@mapNotNull null
-                    Employee(name, cpf, email, role, status)
+                    Employee(id, name, cpf, email, role, status)
                 }
                 originalEmployeeList = list
                 updateDisplayedList()
@@ -152,7 +155,28 @@ class EmployeesActivity : BaseActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = EmployeeAdapter(displayedEmployeeList)
+        adapter = EmployeeAdapter(displayedEmployeeList) { employee ->
+            AlertDialog.Builder(this)
+                .setTitle("Confirmar Exclusão")
+                .setMessage("Tem certeza de que deseja deletar o funcionário ${employee.name}?")
+                .setPositiveButton("Sim") { _, _ ->
+                    lifecycleScope.launch {
+                        funcionarioRepository.deleteFuncionario(employee.id).fold(
+                            onSuccess = {
+                                Toast.makeText(this@EmployeesActivity, "Funcionário ${employee.name} deletado", Toast.LENGTH_SHORT).show()
+                                originalEmployeeList = originalEmployeeList.filter { it.id != employee.id }
+                                updateDisplayedList()
+                            },
+                            onFailure = { error ->
+                                Log.e("EmployeesActivity", "Erro ao deletar funcionário ${employee.id}", error)
+                                Toast.makeText(this@EmployeesActivity, "Erro ao deletar ${employee.name}", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
+                }
+                .setNegativeButton("Não", null)
+                .show()
+        }
         binding.employeeRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.employeeRecyclerView.adapter = adapter
     }
@@ -204,14 +228,20 @@ class EmployeesActivity : BaseActivity() {
 
         displayedEmployeeList.clear()
         displayedEmployeeList.addAll(sortedList)
-        adapter.notifyDataSetChanged()
+        if (::adapter.isInitialized) { // Avoid crash on first load
+            adapter.notifyDataSetChanged()
+        }
     }
 
     data class Employee(
+        val id: String,
         val name: String, val cpf: String, val email: String, val role: String, val status: String
-    ) : Serializable
+    )
 
-    class EmployeeAdapter(private val employees: MutableList<Employee>) : RecyclerView.Adapter<EmployeeAdapter.EmployeeViewHolder>() {
+    class EmployeeAdapter(
+        private val employees: MutableList<Employee>,
+        private val onDeleteClick: (Employee) -> Unit
+    ) : RecyclerView.Adapter<EmployeeAdapter.EmployeeViewHolder>() {
 
         class EmployeeViewHolder(val binding: ItemEmployeeRowBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -231,15 +261,23 @@ class EmployeesActivity : BaseActivity() {
                 employeeRole.text = employee.role
                 employeeStatus.text = employee.status
 
+                val imageRes = when (employee.role.lowercase(Locale.getDefault())) {
+                    "administrador" -> R.drawable.ic_admin
+                    "desenvolvedor" -> R.drawable.ic_developer
+                    "designer" -> R.drawable.ic_designer
+                    else -> R.drawable.ic_developer
+                }
+                employeeImage.setImageResource(imageRes)
+
                 btnEdit.setOnClickListener {
                     val context = holder.itemView.context
                     val intent = Intent(context, EmployeeEditActivity::class.java).apply {
-                        putExtra("employee", employee)
+                        putExtra("EMPLOYEE_ID", employee.id)
                     }
                     context.startActivity(intent)
                 }
                 btnDelete.setOnClickListener {
-                    Toast.makeText(holder.itemView.context, "Deletar ${employee.name}", Toast.LENGTH_SHORT).show()
+                    onDeleteClick(employee)
                 }
             }
         }

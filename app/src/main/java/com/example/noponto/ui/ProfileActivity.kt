@@ -5,11 +5,12 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import com.example.noponto.R
 import com.example.noponto.data.repository.FuncionarioRepository
 import com.example.noponto.databinding.ActivityProfileBinding
 import com.example.noponto.databinding.AppBarBinding
-import com.example.noponto.domain.model.Funcionario
 import com.example.noponto.domain.model.Cargo
+import com.example.noponto.domain.model.Funcionario
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -94,14 +95,21 @@ class ProfileActivity : BaseActivity() {
             }
 
             binding.dropdownStatus.setText(if (funcionario.status) "Ativo" else "Inativo", false)
-            binding.dropdownPerfil.setText(
-                when (funcionario.cargo) {
-                    Cargo.ADMINISTRADOR -> "Administrador"
-                    Cargo.DESENVOLVEDOR -> "Desenvolvedor"
-                    Cargo.DESIGNER -> "Designer"
-                },
-                false
-            )
+
+            when (funcionario.cargo) {
+                Cargo.ADMINISTRADOR -> {
+                    binding.dropdownPerfil.setText("Administrador", false)
+                    binding.profileImage.setImageResource(R.drawable.ic_admin)
+                }
+                Cargo.DESENVOLVEDOR -> {
+                    binding.dropdownPerfil.setText("Desenvolvedor", false)
+                    binding.profileImage.setImageResource(R.drawable.ic_developer)
+                }
+                Cargo.DESIGNER -> {
+                    binding.dropdownPerfil.setText("Designer", false)
+                    binding.profileImage.setImageResource(R.drawable.ic_account_circle) // Default image
+                }
+            }
 
             binding.inputCep.editText?.setText(funcionario.endereco.cep)
             binding.inputRua.editText?.setText(funcionario.endereco.logradouro)

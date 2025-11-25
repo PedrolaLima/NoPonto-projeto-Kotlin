@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "984488427402",
+    "project_id": "noponto-53e2a2c3",
+    "storage_bucket": "noponto-53e2a2c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984488427402:android:a269c7c140c4a756ec1273",
+        "android_client_info": {
+          "package_name": "com.example.noponto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjS-0vfmQJX9g1Ux2xAcKApk0TABHYD4I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

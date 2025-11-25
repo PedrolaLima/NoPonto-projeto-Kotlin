@@ -2,9 +2,12 @@ package com.example.noponto.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import com.example.noponto.data.repository.FuncionarioRepository
 import com.example.noponto.data.repository.PlanoTrabalhoRepository
 import com.example.noponto.databinding.ActivityRegisterBinding
 import com.example.noponto.databinding.AppBarBinding
@@ -13,6 +16,9 @@ import com.example.noponto.domain.model.PlanoTrabalho
 import com.example.noponto.domain.services.PlanoTrabalhoService
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class RegisterActivity : BaseActivity() {
 
@@ -22,6 +28,14 @@ class RegisterActivity : BaseActivity() {
 
     private val planoTrabalhoService: PlanoTrabalhoService by lazy {
         PlanoTrabalhoService(PlanoTrabalhoRepository())
+    }
+
+    private val funcionarioRepository: FuncionarioRepository by lazy {
+        FuncionarioRepository()
+    }
+
+    companion object {
+        private const val TAG = "RegisterActivity"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,9 +51,49 @@ class RegisterActivity : BaseActivity() {
             startActivity(intent)
         }
 
-        binding.btnRegistrarOcorrencia.setOnClickListener {
-            val intent = Intent(this, OccurrenceActivity::class.java)
-            startActivity(intent)
+        binding.btnEspelhoPonto.setOnClickListener {
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user != null) {
+                lifecycleScope.launch {
+                    val result = funcionarioRepository.getFuncionarioById(user.uid)
+                    result.fold(
+                        onSuccess = { funcionario ->
+                            if (funcionario != null) {
+                                val intent = Intent(this@RegisterActivity, RecordUserActivity::class.java)
+
+                                val employeeName = funcionario.nome
+                                val employeeRole = funcionario.cargo.name
+
+                                val calendar = Calendar.getInstance()
+                                val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+                                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                                val firstDayOfMonth = dateFormat.format(calendar.time)
+
+                                calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+                                val lastDayOfMonth = dateFormat.format(calendar.time)
+
+                                val period = "$firstDayOfMonth - $lastDayOfMonth"
+
+                                intent.putExtra("employeeName", employeeName)
+                                intent.putExtra("employeeRole", employeeRole)
+                                intent.putExtra("period", period)
+                                intent.putExtra("USER_ID", user.uid)
+                                startActivity(intent)
+                            } else {
+                                Log.e(TAG, "Funcionário não encontrado no Firestore para o UID: ${user.uid}")
+                                Toast.makeText(this@RegisterActivity, "Erro ao carregar dados do usuário.", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onFailure = { exception ->
+                            Log.e(TAG, "Erro ao buscar funcionário: ", exception)
+                            Toast.makeText(this@RegisterActivity, "Erro ao buscar dados do funcionário.", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            } else {
+                redirectToLogin()
+            }
         }
 
         binding.btnCadastrarPlano.setOnClickListener {
@@ -56,7 +110,7 @@ class RegisterActivity : BaseActivity() {
     private fun carregarPlanoDeTrabalho() {
         val user = FirebaseAuth.getInstance().currentUser
         if (user == null) {
-            // TODO: Tratar caso de usuário não logado
+            redirectToLogin()
             return
         }
 
@@ -66,8 +120,9 @@ class RegisterActivity : BaseActivity() {
                 onSuccess = {
                     atualizarPainelHorarios(it)
                 },
-                onFailure = {
-                    // TODO: Tratar erro ao buscar plano
+                onFailure = { exception ->
+                    Log.e(TAG, "Erro ao buscar plano de trabalho: ", exception)
+                    Toast.makeText(this@RegisterActivity, "Erro ao carregar plano de trabalho.", Toast.LENGTH_SHORT).show()
                 }
             )
         }
@@ -103,5 +158,12 @@ class RegisterActivity : BaseActivity() {
         } else {
             layout.visibility = View.GONE
         }
+    }
+
+    private fun redirectToLogin() {
+        val intent = Intent(this, LoginActivityWithBinding::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 }

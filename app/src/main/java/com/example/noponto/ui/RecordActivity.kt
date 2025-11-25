@@ -73,6 +73,7 @@ class RecordActivity : BaseActivity() {
                 putExtra("employeeName", selectedEmployee?.nome)
                 putExtra("employeeRole", selectedEmployee?.cargo?.name)
                 putExtra("period", selectedPeriod)
+                putExtra("currentUserRole", currentFuncionario?.cargo?.name)
             }
             startActivity(intent)
         }

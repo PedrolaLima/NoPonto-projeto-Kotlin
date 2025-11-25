@@ -58,7 +58,7 @@ class EmployeeRegisterActivity : BaseActivity() {
         val statusAdapter = ArrayAdapter(this, R.layout.dropdown_item, statusOptions)
         binding.statusAutocomplete.setAdapter(statusAdapter)
 
-        val cargoOptions = arrayOf("Administrador", "Desenvolvedor")
+        val cargoOptions = arrayOf("Administrador", "Desenvolvedor", "Designer")
         val cargoAdapter = ArrayAdapter(this, R.layout.dropdown_item, cargoOptions)
         binding.cargoAutocomplete.setAdapter(cargoAdapter)
 
@@ -67,6 +67,7 @@ class EmployeeRegisterActivity : BaseActivity() {
             when (selectedRole) {
                 "Administrador" -> binding.profileImage.setImageResource(R.drawable.ic_admin)
                 "Desenvolvedor" -> binding.profileImage.setImageResource(R.drawable.ic_developer)
+                "Designer" -> binding.profileImage.setImageResource(R.drawable.ic_designer)
             }
         }
 
@@ -236,6 +237,7 @@ class EmployeeRegisterActivity : BaseActivity() {
         return when (cargoStr.trim()) {
             "Administrador" -> Cargo.ADMINISTRADOR
             "Desenvolvedor" -> Cargo.DESENVOLVEDOR
+            "Desginer" -> Cargo.DESIGNER
             else -> throw IllegalArgumentException("Cargo inválido: $cargoStr")
         }
     }

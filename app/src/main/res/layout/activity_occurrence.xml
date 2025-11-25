@@ -95,36 +95,6 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/attestation_layout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/date_time_layout"
-            android:layout_marginTop="32dp">
-
-            <ImageView
-                android:id="@+id/attestation_image"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:background="@drawable/image_border"
-                android:padding="16dp"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_insert_photo"
-                app:tint="@android:color/black" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Insira seu atestado (caso haja)" />
-
-        </LinearLayout>
-
-
-        <LinearLayout
             android:id="@+id/layout_buttons"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

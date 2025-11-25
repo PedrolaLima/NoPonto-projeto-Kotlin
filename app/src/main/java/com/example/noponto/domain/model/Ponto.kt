@@ -8,6 +8,12 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+enum class StatusAprovacao {
+    APROVADO,
+    AGUARDANDO,
+    REPROVADO
+}
+
 /**
  * Modelo de ponto compatível com Firestore (document DB).
  * - `funcionarioId` referencia o funcionário logado (obrigatório para vincular o ponto)
@@ -23,7 +29,8 @@ data class Ponto(
     val homeOffice: Boolean = false,
     val dataHoraPonto: Timestamp? = null,
     val tipoDePonto: TipoDePonto = TipoDePonto.ENTRADA,
-    val observacao: String = ""
+    val observacao: String = "",
+    val statusAprovacao: StatusAprovacao = StatusAprovacao.AGUARDANDO
 )
 {
     companion object {
@@ -86,7 +93,8 @@ data class Ponto(
                 homeOffice = homeOffice,
                 dataHoraPonto = ts,
                 tipoDePonto = tipo,
-                observacao = observacao
+                observacao = observacao,
+                statusAprovacao = StatusAprovacao.AGUARDANDO
             )
         }
     }
