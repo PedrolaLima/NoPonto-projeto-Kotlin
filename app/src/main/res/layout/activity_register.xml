@@ -41,6 +41,7 @@
                     android:padding="20dp">
 
                     <TextView
+                        android:id="@+id/plano_cadastrado_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="PLANO CADASTRADO"
@@ -49,52 +50,70 @@
                         android:textColor="@android:color/black"
                         android:layout_marginBottom="20dp"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:id="@+id/presencial_layout"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Trabalho Presencial:"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:textColor="@android:color/black"
-                        android:layout_marginBottom="4dp"/>
+                        android:orientation="vertical"
+                        android:layout_marginBottom="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Monday, Tuesday, Wednesday"
-                        android:textSize="18sp"
-                        android:textColor="@android:color/black"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Trabalho Presencial:"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            android:textColor="@android:color/black"
+                            android:layout_marginBottom="4dp"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="19h - 19h"
-                        android:textSize="18sp"
-                        android:textColor="@android:color/black"
-                        android:layout_marginBottom="20dp"/>
+                        <TextView
+                            android:id="@+id/dias_presencial_textview"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="Monday, Tuesday, Wednesday"
+                            android:textSize="18sp"
+                            android:textColor="@android:color/black"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Trabalho Remoto:"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:textColor="@android:color/black"
-                        android:layout_marginBottom="4dp"/>
+                        <TextView
+                            android:id="@+id/horario_presencial_textview"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="19h - 19h"
+                            android:textSize="18sp"
+                            android:textColor="@android:color/black"/>
+                    </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:id="@+id/remoto_layout"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Friday, Thursday, Saturday"
-                        android:textSize="18sp"
-                        android:textColor="@android:color/black"/>
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="20h - 19h"
-                        android:textSize="18sp"
-                        android:textColor="@android:color/black"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Trabalho Remoto:"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            android:textColor="@android:color/black"
+                            android:layout_marginBottom="4dp"/>
+
+                        <TextView
+                            android:id="@+id/dias_remoto_textview"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="Friday, Thursday, Saturday"
+                            android:textSize="18sp"
+                            android:textColor="@android:color/black"/>
+
+                        <TextView
+                            android:id="@+id/horario_remoto_textview"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="20h - 19h"
+                            android:textSize="18sp"
+                            android:textColor="@android:color/black"/>
+                    </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

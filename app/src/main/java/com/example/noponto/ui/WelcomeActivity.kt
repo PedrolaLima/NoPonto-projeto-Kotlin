@@ -3,6 +3,8 @@ package com.example.noponto.ui
 import android.os.Bundle
 import com.example.noponto.databinding.ActivityWelcomeBinding
 import com.example.noponto.databinding.AppBarBinding
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class WelcomeActivity : BaseActivity() {
 
@@ -15,18 +17,21 @@ class WelcomeActivity : BaseActivity() {
         binding = ActivityWelcomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // This will set up all the app bar logic from the BaseActivity
         setupAppBar()
 
-        // --- Logic specific to WelcomeActivity ---
         displayWelcomeMessage()
     }
 
     private fun displayWelcomeMessage() {
-        val userRole = "ADMINISTRADOR"
-        val userName = "Pedro Franca"
-
-        binding.welcomeMessageTextView.text = "BEM VINDO,\n$userRole!"
-        appBarBinding.userRole.text = userName
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            FirebaseFirestore.getInstance().collection("users").document(userId).get()
+                .addOnSuccessListener { document ->
+                    if (document != null && document.exists()) {
+                        val role = document.getString("role")
+                        binding.welcomeMessageTextView.text = "BEM VINDO,\n${role?.uppercase() ?: ""}"
+                    }
+                }
+        }
     }
 }

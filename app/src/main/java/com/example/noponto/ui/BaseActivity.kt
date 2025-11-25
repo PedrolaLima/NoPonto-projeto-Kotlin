@@ -11,14 +11,22 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import com.example.noponto.R
 import com.example.noponto.databinding.AppBarBinding
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 abstract class BaseActivity : AppCompatActivity() {
 
     // Each child activity must provide its own app bar binding
     protected abstract val appBarBinding: AppBarBinding
 
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         // Go edge-to-edge
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -30,6 +38,7 @@ abstract class BaseActivity : AppCompatActivity() {
     protected fun setupAppBar() {
         applyStatusBarInsets()
         setupClickListeners()
+        loadUserName()
     }
 
     private fun applyStatusBarInsets() {
@@ -71,5 +80,18 @@ abstract class BaseActivity : AppCompatActivity() {
             }
         }
         popupMenu.show()
+    }
+
+    private fun loadUserName() {
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            db.collection("users").document(userId).get()
+                .addOnSuccessListener { document ->
+                    if (document != null && document.exists()) {
+                        val name = document.getString("name")
+                        appBarBinding.userRole.text = name
+                    }
+                }
+        }
     }
 }

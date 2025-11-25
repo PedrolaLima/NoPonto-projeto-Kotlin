@@ -6,19 +6,30 @@ import android.text.TextWatcher
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import com.example.noponto.R
+import com.example.noponto.data.repository.PlanoTrabalhoRepository
+import com.example.noponto.data.repository.PontoRepository
 import com.example.noponto.databinding.ActivityClockInBinding
 import com.example.noponto.databinding.AppBarBinding
+import com.example.noponto.domain.model.DiaSemana
+import com.example.noponto.domain.model.TipoDePonto
+import com.example.noponto.domain.services.PlanoTrabalhoService
+import com.example.noponto.domain.services.PontoService
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
+import java.util.*
 
 class ClockInActivity : BaseActivity() {
 
     private lateinit var binding: ActivityClockInBinding
     override val appBarBinding: AppBarBinding
         get() = binding.appBarLayout
+
+    private val pontoService = PontoService(PontoRepository())
+    private val planoTrabalhoService = PlanoTrabalhoService(PlanoTrabalhoRepository())
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,9 +48,103 @@ class ClockInActivity : BaseActivity() {
 
         binding.buttonConfirmar.setOnClickListener {
             if (validateFinalInputs()) {
-                // TODO: Implementar a lógica de confirmação
-                Toast.makeText(this, "Ponto registrado com sucesso!", Toast.LENGTH_SHORT).show()
-                finish()
+                val dateStr = binding.inputData.editText?.text.toString()
+                val timeStr = binding.inputHora.editText?.text.toString()
+                val tipoPontoStr = (binding.dropdownTipoPonto.editText as? AutoCompleteTextView)?.text.toString()
+                val isHomeOffice = binding.checkboxHomeOffice.isChecked
+
+                val tipoPonto = when (tipoPontoStr) {
+                    "Entrada" -> TipoDePonto.ENTRADA
+                    "Saída" -> TipoDePonto.SAIDA
+                    "Início do intervalo" -> TipoDePonto.INICIO_DE_INTERVALO
+                    "Fim do intervalo" -> TipoDePonto.FIM_DE_INTERVALO
+                    else -> null
+                }
+
+                if (tipoPonto == null) {
+                    Toast.makeText(this, "Tipo de ponto inválido.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                lifecycleScope.launch {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    if (user == null) {
+                        Toast.makeText(this@ClockInActivity, "Usuário não autenticado.", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val planResult = planoTrabalhoService.buscarPlanoAtivoDoFuncionario(user.uid)
+                    planResult.fold(
+                        onSuccess = { plano ->
+                            if (plano == null) {
+                                Toast.makeText(this@ClockInActivity, "Nenhum plano de trabalho ativo encontrado.", Toast.LENGTH_LONG).show()
+                                return@fold
+                            }
+
+                            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                            val date = try { sdf.parse(dateStr) } catch (e: Exception) { null }
+                            if (date == null) {
+                                Toast.makeText(this@ClockInActivity, "Data inválida.", Toast.LENGTH_LONG).show()
+                                return@fold
+                            }
+
+                            val calendar = Calendar.getInstance()
+                            calendar.time = date
+                            val dayOfWeekInt = calendar.get(Calendar.DAY_OF_WEEK)
+
+                            val diaSemana = when (dayOfWeekInt) {
+                                Calendar.MONDAY -> DiaSemana.SEGUNDA
+                                Calendar.TUESDAY -> DiaSemana.TERCA
+                                Calendar.WEDNESDAY -> DiaSemana.QUARTA
+                                Calendar.THURSDAY -> DiaSemana.QUINTA
+                                Calendar.FRIDAY -> DiaSemana.SEXTA
+                                else -> null
+                            }
+
+                            if (diaSemana == null) {
+                                Toast.makeText(this@ClockInActivity, "Ponto não pode ser registrado em fins de semana.", Toast.LENGTH_LONG).show()
+                                return@fold
+                            }
+
+                            val horarios = if (isHomeOffice) plano.remoto else plano.presencial
+                            val horarioDia = horarios.find { it.dia == diaSemana }
+
+                            if (horarioDia == null) {
+                                val mode = if(isHomeOffice) "remoto" else "presencial"
+                                Toast.makeText(this@ClockInActivity, "Hoje não é um dia de trabalho ${mode} no seu plano.", Toast.LENGTH_LONG).show()
+                                return@fold
+                            }
+
+                            val timeParts = timeStr.split(":")
+                            val currentTimeInMinutes = timeParts[0].toInt() * 60 + timeParts[1].toInt()
+
+                            val validTime = when (tipoPonto) {
+                                TipoDePonto.ENTRADA -> currentTimeInMinutes >= (horarioDia.inicioMinutes - 30) && currentTimeInMinutes <= horarioDia.fimMinutes
+                                TipoDePonto.SAIDA -> currentTimeInMinutes >= horarioDia.inicioMinutes && currentTimeInMinutes <= (horarioDia.fimMinutes + 30)
+                                TipoDePonto.INICIO_DE_INTERVALO, TipoDePonto.FIM_DE_INTERVALO -> currentTimeInMinutes >= horarioDia.inicioMinutes && currentTimeInMinutes <= horarioDia.fimMinutes
+                            }
+
+                            if (!validTime) {
+                                Toast.makeText(this@ClockInActivity, "O horário do ponto não corresponde ao seu plano de trabalho.", Toast.LENGTH_LONG).show()
+                                return@fold
+                            }
+
+                            val result = pontoService.registrarPonto(dateStr, timeStr, tipoPonto, isHomeOffice)
+                            result.fold(
+                                onSuccess = {
+                                    Toast.makeText(this@ClockInActivity, "Ponto registrado com sucesso!", Toast.LENGTH_SHORT).show()
+                                    finish()
+                                },
+                                onFailure = { e ->
+                                    Toast.makeText(this@ClockInActivity, "Erro ao registrar ponto: ${e.message}", Toast.LENGTH_LONG).show()
+                                }
+                            )
+                        },
+                        onFailure = { e ->
+                            Toast.makeText(this@ClockInActivity, "Erro ao buscar plano de trabalho: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }
             }
         }
     }

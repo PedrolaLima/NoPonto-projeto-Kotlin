@@ -104,10 +104,10 @@ class EmployeesActivity : BaseActivity() {
         } else {
             originalEmployeeList.filter {
                 it.name.lowercase(Locale.getDefault()).contains(query) ||
-                it.cpf.contains(query) ||
-                it.email.lowercase(Locale.getDefault()).contains(query) ||
-                it.role.lowercase(Locale.getDefault()).contains(query) ||
-                it.status.lowercase(Locale.getDefault()).contains(query)
+                        it.cpf.contains(query) ||
+                        it.email.lowercase(Locale.getDefault()).contains(query) ||
+                        it.role.lowercase(Locale.getDefault()).contains(query) ||
+                        it.status.lowercase(Locale.getDefault()).contains(query)
             }
         }
 
