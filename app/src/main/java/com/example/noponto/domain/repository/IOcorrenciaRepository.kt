@@ -48,5 +48,10 @@ interface IOcorrenciaRepository {
      * Retorna as últimas ocorrências de um funcionário (limit padrão 20).
      */
     suspend fun buscarUltimasOcorrencias(funcionarioId: String, limit: Int = 20): Result<List<Ocorrencia>>
+
+    /**
+     * Busca ocorrência relacionada a um ponto específico.
+     */
+    suspend fun buscarOcorrenciaPorPontoId(pontoId: String): Result<Ocorrencia?>
 }
 

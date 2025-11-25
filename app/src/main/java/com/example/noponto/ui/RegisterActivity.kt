@@ -77,8 +77,9 @@ class RegisterActivity : BaseActivity() {
 
                                 intent.putExtra("employeeName", employeeName)
                                 intent.putExtra("employeeRole", employeeRole)
+                                intent.putExtra("funcionarioId", user.uid)
                                 intent.putExtra("period", period)
-                                intent.putExtra("USER_ID", user.uid)
+                                intent.putExtra("currentUserRole", funcionario.cargo.name)
                                 startActivity(intent)
                             } else {
                                 Log.e(TAG, "Funcionário não encontrado no Firestore para o UID: ${user.uid}")

@@ -86,12 +86,15 @@ class PontoRepository(
 
     override suspend fun listarPontosDoFuncionario(funcionarioId: String, limit: Int): Result<List<Ponto>> {
         return try {
+            // Query simples sem orderBy para evitar necessidade de índice composto
             val query = db.collection("pontos")
                 .whereEqualTo("funcionarioId", funcionarioId)
-                .orderBy("dataHoraPonto", Query.Direction.DESCENDING)
-                .limit(limit.toLong())
             val snap = query.get().await()
-            val list = snap.documents.mapNotNull { it.toObject(Ponto::class.java) }
+            // Ordena no código e aplica limit
+            val list = snap.documents
+                .mapNotNull { it.toObject(Ponto::class.java) }
+                .sortedByDescending { it.dataHoraPonto }
+                .take(limit)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -103,14 +106,17 @@ class PontoRepository(
             val startTs = Timestamp(Date(startMillis))
             val endTs = Timestamp(Date(endMillis))
 
+            // Query simples sem orderBy para evitar necessidade de índice composto
             val query = db.collection("pontos")
                 .whereEqualTo("funcionarioId", funcionarioId)
                 .whereGreaterThanOrEqualTo("dataHoraPonto", startTs)
                 .whereLessThanOrEqualTo("dataHoraPonto", endTs)
-                .orderBy("dataHoraPonto", Query.Direction.ASCENDING)
 
             val snap = query.get().await()
-            val list = snap.documents.mapNotNull { it.toObject(Ponto::class.java) }
+            // Ordena no código
+            val list = snap.documents
+                .mapNotNull { it.toObject(Ponto::class.java) }
+                .sortedBy { it.dataHoraPonto }
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)
@@ -119,12 +125,15 @@ class PontoRepository(
 
     override suspend fun buscarUltimosPontos(funcionarioId: String, limit: Int): Result<List<Ponto>> {
         return try {
+            // Query simples sem orderBy para evitar necessidade de índice composto
             val query = db.collection("pontos")
                 .whereEqualTo("funcionarioId", funcionarioId)
-                .orderBy("dataHoraPonto", Query.Direction.DESCENDING)
-                .limit(limit.toLong())
             val snap = query.get().await()
-            val list = snap.documents.mapNotNull { it.toObject(Ponto::class.java) }
+            // Ordena no código e aplica limit
+            val list = snap.documents
+                .mapNotNull { it.toObject(Ponto::class.java) }
+                .sortedByDescending { it.dataHoraPonto }
+                .take(limit)
             Result.success(list)
         } catch (e: Exception) {
             Result.failure(e)

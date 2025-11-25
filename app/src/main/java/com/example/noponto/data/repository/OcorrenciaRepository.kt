@@ -1,5 +1,6 @@
 package com.example.noponto.data.repository
 
+import android.util.Log
 import com.example.noponto.domain.model.Ocorrencia
 import com.example.noponto.domain.repository.IOcorrenciaRepository
 import com.google.android.gms.tasks.Task
@@ -14,6 +15,10 @@ import kotlin.coroutines.resumeWithException
 class OcorrenciaRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) : IOcorrenciaRepository {
+
+    companion object {
+        private const val TAG = "OcorrenciaRepository"
+    }
 
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { cont ->
         addOnSuccessListener { result -> cont.resume(result) }
@@ -61,8 +66,11 @@ class OcorrenciaRepository(
 
     override suspend fun salvarOcorrencia(ocorrencia: Ocorrencia): Result<String> {
         return try {
+            Log.d(TAG, "salvarOcorrencia: iniciando")
             val docRef = db.collection("ocorrencias").document()
             val id = docRef.id
+            Log.d(TAG, "  ID gerado: $id")
+
             val toSave = mapOf(
                 "id" to id,
                 "funcionarioRef" to ocorrencia.funcionarioRef,
@@ -73,12 +81,21 @@ class OcorrenciaRepository(
                 "hasAtestado" to ocorrencia.hasAtestado,
                 "atestadoStoragePath" to ocorrencia.atestadoStoragePath,
                 "status" to (ocorrencia.status.name ?: Ocorrencia.StatusOcorrencia.PENDENTE.name),
-                "criadoEm" to (ocorrencia.criadoEm ?: Timestamp.now())
+                "criadoEm" to (ocorrencia.criadoEm ?: Timestamp.now()),
+                "pontoId" to ocorrencia.pontoId
             )
+
+            Log.d(TAG, "  Dados a salvar:")
+            Log.d(TAG, "    funcionarioId: ${toSave["funcionarioId"]}")
+            Log.d(TAG, "    justificativa: ${toSave["justificativa"]}")
+            Log.d(TAG, "    pontoId: ${toSave["pontoId"]}")
+
             docRef.set(toSave).awaitVoid()
+            Log.d(TAG, "  Ocorrência salva com sucesso!")
             Result.success(id)
-        } catch (_: Exception) {
-            Result.failure(Exception("Falha ao salvar ocorrência"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao salvar ocorrência", e)
+            Result.failure(Exception("Falha ao salvar ocorrência: ${e.message}"))
         }
     }
 
@@ -95,7 +112,8 @@ class OcorrenciaRepository(
                 "hasAtestado" to ocorrencia.hasAtestado,
                 "atestadoStoragePath" to ocorrencia.atestadoStoragePath,
                 "status" to (ocorrencia.status.name ?: Ocorrencia.StatusOcorrencia.PENDENTE.name),
-                "criadoEm" to (ocorrencia.criadoEm ?: Timestamp.now())
+                "criadoEm" to (ocorrencia.criadoEm ?: Timestamp.now()),
+                "pontoId" to ocorrencia.pontoId
             )
             docRef.set(toSave).awaitVoid()
             Result.success(Unit)
@@ -174,6 +192,20 @@ class OcorrenciaRepository(
             Result.success(list)
         } catch (_: Exception) {
             Result.failure(Exception("Falha ao buscar últimas ocorrências"))
+        }
+    }
+
+    override suspend fun buscarOcorrenciaPorPontoId(pontoId: String): Result<Ocorrencia?> {
+        return try {
+            if (pontoId.isBlank()) return Result.success(null)
+            val query = db.collection("ocorrencias")
+                .whereEqualTo("pontoId", pontoId)
+                .limit(1)
+            val snap = query.get().await()
+            val ocorrencia = snap.documents.firstOrNull()?.let { docToOcorrencia(it) }
+            Result.success(ocorrencia)
+        } catch (_: Exception) {
+            Result.failure(Exception("Falha ao buscar ocorrência por ponto"))
         }
     }
 }

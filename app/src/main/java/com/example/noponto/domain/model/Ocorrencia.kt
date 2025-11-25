@@ -25,7 +25,8 @@ data class Ocorrencia(
     val hasAtestado: Boolean = false,
     val atestadoStoragePath: String? = null,
     val status: StatusOcorrencia = StatusOcorrencia.PENDENTE,
-    val criadoEm: Timestamp? = null
+    val criadoEm: Timestamp? = null,
+    val pontoId: String? = null  // ID do ponto relacionado (se houver)
 )
 {
     enum class StatusOcorrencia {
@@ -79,7 +80,8 @@ data class Ocorrencia(
             timeStr: String,
             hasAtestado: Boolean = false,
             atestadoStoragePath: String? = null,
-            status: StatusOcorrencia = StatusOcorrencia.PENDENTE
+            status: StatusOcorrencia = StatusOcorrencia.PENDENTE,
+            pontoId: String? = null
         ): Ocorrencia {
             val ts = parseDateAndTimeToTimestamp(dateStr, timeStr) ?: Timestamp.now()
             return Ocorrencia(
@@ -92,7 +94,8 @@ data class Ocorrencia(
                 hasAtestado = hasAtestado,
                 atestadoStoragePath = atestadoStoragePath,
                 status = status,
-                criadoEm = Timestamp.now()
+                criadoEm = Timestamp.now(),
+                pontoId = pontoId
             )
         }
     }

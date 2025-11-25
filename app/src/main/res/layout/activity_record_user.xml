@@ -92,6 +92,7 @@
                             <TextView style="@style/TableHeader.White" android:layout_width="105dp" android:layout_height="wrap_content" android:text="Horas" />
                             <TextView style="@style/TableHeader.White" android:layout_width="135dp" android:layout_height="wrap_content" android:text="Observações" />
                             <TextView style="@style/TableHeader.White" android:layout_width="120dp" android:layout_height="wrap_content" android:text="Status" />
+                            <TextView style="@style/TableHeader.White" android:layout_width="140dp" android:layout_height="wrap_content" android:text="Descrição" />
                         </LinearLayout>
 
                         <androidx.recyclerview.widget.RecyclerView

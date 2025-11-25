@@ -3,6 +3,7 @@ package com.example.noponto.ui
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.example.noponto.databinding.ActivityOccurrenceBinding
@@ -22,10 +23,20 @@ class OccurrenceActivity : BaseActivity() {
     override val appBarBinding: AppBarBinding
         get() = binding.appBarLayout
 
+    private var pontoId: String? = null
+
+    companion object {
+        private const val TAG = "OccurrenceActivity"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOccurrenceBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Recebe o pontoId da Intent
+        pontoId = intent.getStringExtra("PONTO_ID")
+        Log.d(TAG, "onCreate: pontoId recebido = $pontoId")
 
         setupAppBar()
         setupInitialValues()
@@ -33,6 +44,7 @@ class OccurrenceActivity : BaseActivity() {
         setupValidation()
 
         binding.buttonConfirmar.setOnClickListener {
+            Log.d(TAG, "Botão Confirmar clicado")
             // implementar cadastro de ocorrência
             binding.buttonConfirmar.isEnabled = false
             lifecycleScope.launch(Dispatchers.IO) {
@@ -40,22 +52,36 @@ class OccurrenceActivity : BaseActivity() {
                 val dateStr = binding.dateEditText.text.toString().trim()
                 val timeStr = binding.timeEditText.text.toString().trim()
 
+                Log.d(TAG, "Iniciando cadastro de ocorrência:")
+                Log.d(TAG, "  justificativa: $justificativa")
+                Log.d(TAG, "  dateStr: $dateStr")
+                Log.d(TAG, "  timeStr: $timeStr")
+                Log.d(TAG, "  pontoId: $pontoId")
+
                 try {
                     val repo = com.example.noponto.data.repository.OcorrenciaRepository()
                     val service = com.example.noponto.domain.services.OcorrenciaService(repo)
-                    val result = service.criarOcorrenciaFromUi(justificativa, dateStr, timeStr, null)
+
+                    Log.d(TAG, "Chamando service.criarOcorrenciaFromUi...")
+                    val result = service.criarOcorrenciaFromUi(justificativa, dateStr, timeStr, pontoId, null)
+
+                    Log.d(TAG, "Result: isSuccess=${result.isSuccess}, isFailure=${result.isFailure}")
 
                     withContext(Dispatchers.Main) {
                         if (result.isSuccess) {
+                            val ocorrenciaId = result.getOrNull()
+                            Log.d(TAG, "Ocorrência registrada com sucesso! ID: $ocorrenciaId")
                             Toast.makeText(this@OccurrenceActivity, "Ocorrência registrada com sucesso", Toast.LENGTH_SHORT).show()
                             finish()
                         } else {
                             val ex = result.exceptionOrNull()
+                            Log.e(TAG, "Erro ao registrar ocorrência", ex)
                             Toast.makeText(this@OccurrenceActivity, "Erro: ${ex?.localizedMessage ?: "Falha ao registrar"}", Toast.LENGTH_LONG).show()
                             binding.buttonConfirmar.isEnabled = true
                         }
                     }
                 } catch (e: Exception) {
+                    Log.e(TAG, "Exception ao registrar ocorrência", e)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@OccurrenceActivity, "Erro: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                         binding.buttonConfirmar.isEnabled = true
