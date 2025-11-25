@@ -111,6 +111,7 @@ class MenuDialogFragment : DialogFragment() {
                         // Controla a visibilidade do menu de funcionários
                         val isAdmin = funcionario.cargo == Cargo.ADMINISTRADOR
                         binding.menuFuncionarios.isVisible = isAdmin
+                        binding.menuRelatorios.isVisible = isAdmin
 
                         if (isAdmin) {
                             Log.d("MenuDialogFragment", "✅ Menu de funcionários VISÍVEL - Usuário é ADMINISTRADOR")
